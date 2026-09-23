@@ -20,10 +20,11 @@ class Entry:
 
 
 class Timeline:
-    def __init__(self, asset: Asset, now=None):
+    def __init__(self, asset: Asset, now=None, source=''):
         now = time.time() if now is None else now
         self.entries = deque()
         self.asset = self.desired = asset
+        self.source = self.desired_source = source
         self.position = 0
         self.next_start = now - 6
         self.sequence = int(now * 1000)
@@ -31,8 +32,10 @@ class Timeline:
         self.target_duration = 2
         self.tick(now)
 
-    def select(self, asset: Asset):
+    def select(self, asset: Asset, source=None):
         self.desired = asset
+        if source is not None:
+            self.desired_source = source
 
     def tick(self, now=None):
         now = time.time() if now is None else now
@@ -44,6 +47,7 @@ class Timeline:
             if changed:
                 self.asset = self.desired
                 self.position = 0
+            self.source = self.desired_source
             boundary = bool(self.entries) and self.position == 0
             if boundary:
                 self.discontinuity += 1

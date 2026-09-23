@@ -34,6 +34,22 @@ def test_discontinuity_sequence_survives_sliding_window():
     assert len(timeline.entries) < 105
 
 
+def test_source_tracks_actual_switch_even_for_identical_content():
+    shared = asset('a')
+    timeline = Timeline(shared, now=100, source='first.mp4')
+    published = list(timeline.entries)
+    timeline.select(shared, source='duplicate.mp4')
+    timeline.tick(100)
+    assert timeline.source == 'first.mp4'
+    timeline.tick(101)
+    assert timeline.source == 'duplicate.mp4'
+    assert list(timeline.entries)[:len(published)] == published
+    timeline.select(asset('b'), source='new.mp4')
+    assert timeline.source == 'duplicate.mp4'
+    timeline.tick(103)
+    assert timeline.source == 'new.mp4'
+
+
 def test_channel_identity_persists_across_edit_and_restart(tmp_path):
     path = tmp_path / 'channels.db'
     store = Store(path)

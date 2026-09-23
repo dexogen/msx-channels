@@ -102,6 +102,10 @@ def test_admin_live_switch_rotation_and_persistence(tmp_path):
             data('/admin/api/videos', method='DELETE', body={'file': 'uploaded.mp4'})
         assert error.value.code == 409
         url = channel['url']
+        # Identical bytes share prepared segments, but only the selected file is in use.
+        data('/admin/api/videos', method='DELETE', body={'file': 'Красный ролик.mp4'})
+        assert not (media / 'Красный ролик.mp4').exists()
+        assert (media / 'uploaded.mp4').exists()
         with request(url) as r:
             assert r.headers['Access-Control-Allow-Origin'] == '*'
             initial = r.read().decode()

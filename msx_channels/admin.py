@@ -158,10 +158,8 @@ def add_admin(app, settings, library):
         path = settings.media / name
         if not path.resolve().is_relative_to(settings.media.resolve()) or path.is_symlink():
             raise web.HTTPForbidden()
-        asset_keys = {v['asset'].key for (file, _), v in library.variants.items()
-                      if file == name and v.get('asset')}
         in_use = [row['title'] for row in library.rows.values() if row['video'] == name
-                  or (row['id'] in library.timelines and library.timelines[row['id']].asset.key in asset_keys)]
+                  or (row['id'] in library.timelines and library.timelines[row['id']].source == name)]
         if in_use:
             raise web.HTTPConflict(text='Video is still used by: ' + ', '.join(in_use))
         try:

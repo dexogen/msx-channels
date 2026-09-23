@@ -109,9 +109,9 @@ class Library:
                 asset = variant.get('asset') if variant else None
                 if asset:
                     if identifier not in self.timelines:
-                        self.timelines[identifier] = Timeline(asset)
+                        self.timelines[identifier] = Timeline(asset, source=row['video'])
                     else:
-                        self.timelines[identifier].select(asset)
+                        self.timelines[identifier].select(asset, source=row['video'])
             for timeline in self.timelines.values():
                 timeline.tick()
             await asyncio.sleep(0.25)
