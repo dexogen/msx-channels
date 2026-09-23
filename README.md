@@ -4,6 +4,17 @@
 одна подключённая папка и один домен или IP. Админка позволяет загрузить видео,
 создать канал, выбрать ролик и заменить его прямо во время просмотра.
 
+**Первый запуск на домашнем компьютере:**
+[простая инструкция для Windows](docs/windows.md) ·
+[простая инструкция для macOS](docs/macos.md).
+От установки Docker Desktop до загрузки видео и настройки Media Station X на телевизоре.
+
+Готовый образ `ghcr.io/dexogen/msx-channels:latest` поддерживает **x64 и ARM64**:
+компьютеры с Intel/AMD, Mac с Apple M и Raspberry Pi 5 с **64-битной** Raspberry Pi OS
+или Ubuntu. Docker сам выбирает подходящую версию; эмуляция на Apple M не нужна.
+На Raspberry Pi используйте [Docker Engine](https://docs.docker.com/engine/install/debian/)
+и команды быстрого запуска ниже.
+
 ## Быстрый запуск
 
 ```bash
@@ -42,7 +53,11 @@ Docker Desktop. Путь можно изменить через `VIDEO_DIR=/abso
 
 ## Настройка Media Station X
 
-Откройте **Settings → Start Parameter → Setup** и введите `SERVER_IP:8080`.
+Установите **Media Station X** из магазина приложений телевизора и откройте его.
+Компьютер с сервисом и телевизор должны быть доступны друг другу по сети.
+Откройте **Settings → Start Parameter → Setup** и введите `SERVER_IP:8080`,
+где `SERVER_IP` — адрес компьютера, например `192.168.1.50`.
+При подключении по обычному HTTP замок HTTPS должен быть выключен.
 Приложение запросит `/msx/start.json` и покажет общее меню каналов.
 
 Для HTTPS за reverse proxy установите, например:
@@ -197,8 +212,9 @@ python -m venv .venv
 .venv/bin/python -m pytest -q
 ```
 
-GitHub Actions запускает тесты и публикует `linux/amd64` образ в GHCR после push
-в `main`, по тегам `v*` и вручную. Теги образа: `latest`, `sha-...`, версия из
+GitHub Actions запускает тесты внутри образов на нативных x64- и ARM64-серверах,
+включая реальный FFmpeg, и публикует единый образ для `linux/amd64` и `linux/arm64`
+в GHCR после push в `main`, по тегам `v*` и вручную. Теги образа: `latest`, `sha-...`, версия из
 Git tag. Pull requests проходят тесты без публикации. Actions используют
 `GITHUB_TOKEN` с `packages: write`; отдельный registry token не нужен.
 Для анонимного `docker pull` пакет GHCR должен иметь visibility `Public`.

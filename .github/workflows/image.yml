@@ -16,20 +16,32 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13'
-          cache: pip
-      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - run: pip install -r requirements.txt pytest
-      - run: python -m pytest -q
       - name: Validate Compose
         env:
           ADMIN_PASSWORD: unused-validation-only
         run: docker compose config --quiet
+      - name: Build native image
+        run: docker build --tag msx-channels:test .
+      - name: Test image with FFmpeg
+        run: |
+          docker run --rm --init \
+            --read-only --tmpfs /tmp:rw,size=256m,mode=1777 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --volume "$PWD/tests:/app/tests:ro" \
+            --entrypoint sh msx-channels:test \
+            -c 'pip install --quiet --no-cache-dir --target /tmp/test-deps pytest && PYTHONPATH=/tmp/test-deps python -m pytest -q -p no:cacheprovider /app/tests'
 
   publish:
     needs: test
@@ -40,6 +52,9 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -58,7 +73,7 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
