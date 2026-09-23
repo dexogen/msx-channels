@@ -1,0 +1,4 @@
+services:
+  msx:
+    image: msx-channels:local
+    build: .

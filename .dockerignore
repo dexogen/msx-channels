@@ -1,0 +1,10 @@
+.git
+.github
+.venv
+.env
+videos
+tests
+test-output
+dist
+**/__pycache__
+.pytest_cache
